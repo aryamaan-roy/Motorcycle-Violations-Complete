@@ -38,14 +38,14 @@ from tools import generate_detections as gdet
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 #flags.DEFINE_string('weights', './ Weights/yolov4-416',
 #                    'path to weights file')
-flags.DEFINE_string('weights_L4', '../Weights/yolov4-416_L4','path to weights file')
-flags.DEFINE_string('weights_RHNH', '../ Weights/yolov4-416-FG','path to weights file')
+flags.DEFINE_string('weights_L4', '../Weights/rider_motor_512','path to weights file')
+flags.DEFINE_string('weights_RHNH', '../Weights/helmet_no_helmet_512','path to weights file')
 flags.DEFINE_string('classes', '../data/classes/4_class_detector.names','path to manes file')
-flags.DEFINE_integer('size', 416, 'resize images to')
+flags.DEFINE_integer('size', 512, 'resize images to')
 flags.DEFINE_float('rider_pred_threshold', 1.5, 'IOU/NIOU area threshold')
 flags.DEFINE_boolean('tiny', False, 'yolo or yolo-tiny')
 flags.DEFINE_string('model', 'yolov4', 'yolov3 or yolov4')
-flags.DEFINE_string('trapezium_pred_model', './Weights/Trapezium_Prediction_Weights.pickle', 'add the model weights for predicting trapezium bounding box as a post-processing step')
+flags.DEFINE_string('trapezium_pred_model', '../Weights/Trapezium_Prediction_Weights.pickle', 'add the model weights for predicting trapezium bounding box as a post-processing step')
 flags.DEFINE_string('video', '../data/Videos/3idiots.mp4', 'path to input video or set to 0 for webcam')
 flags.DEFINE_string('output', './outputs/detections/3idiots.mp4', 'path to raw output video')
 flags.DEFINE_string('output_format', 'mp4v', 'codec used in VideoWriter when saving video to file')
@@ -57,6 +57,44 @@ flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
 flags.DEFINE_boolean('interpolation', True, 'interpolate the missing bounding boxes based on future frames')
 
 
+def trapez_rider_iou(y_, rider):
+
+    y_ = [[y_[0], y_[1]], [y_[2], y_[3]], [y_[4], y_[5]], [y_[6], y_[7]]]
+    x, y, w, h = rider['x'], rider['y'], rider['w'], rider['h']
+    rider = [[x-w/2, y-h/2], [x+w/2, y-h/2], [x+w/2, y+h/2], [x-w/2, y+h/2]]
+
+    return iou(y_, rider)
+
+def get_instance_with_trapez(rider, trapezium, iou_threshold):
+    """
+    args:
+    rider, trapezium : pd.DataFrame
+
+    output:
+    rider, trapezium : pd.DataFrame with a column named 'instance_id'
+    """
+    # print info of the rider and trapezium dataframes
+    print("Rider dataframe info:")
+    print(rider.info())
+    trapezium_instance_ids = np.zeros(len(trapezium))
+    for i in range(len(trapezium)):
+        trapezium_instance_ids[i] = i
+        for j in range(len(rider)):
+            if (trapez_rider_iou(trapezium[i], rider.iloc[j]) > iou_threshold):
+                if (rider.iloc[j]['instance_id'] == -1):
+                    rider.iat[j,rider.columns.get_loc('instance_id')] = i
+                else:
+                    instance = int(rider.iloc[j]['instance_id'])
+                    if (trapez_rider_iou(trapezium[instance], rider.iloc[j]) < trapez_rider_iou(trapezium[i], rider.iloc[j])):
+                        rider.iat[j,rider.columns.get_loc('instance_id')] = i
+                    else:
+                        rider.iat[j,rider.columns.get_loc('instance_id')] = instance
+    return rider, trapezium_instance_ids
+
+
+# assigns a unique instance id to each motorcycle. Then loops over all riders and assigns the same instance id to the rider if the IOU is greater than the threshold.
+# If the rider is already assigned to a motorcycle, then the iou of rider with the 2 motorcycles is calculated and the rider is assigned to the motorcycle with the higher iou.
+# Updated rider and motorcycle dataframes are returned.
 def get_instance(rider, motorcycle, iou_threshold):
     """
     args:
@@ -73,7 +111,7 @@ def get_instance(rider, motorcycle, iou_threshold):
     print(rider.info())
     print("Motorcycle dataframe info:")
     print(motorcycle.info())
-
+    
     for i in range(len(motorcycle)):
         motorcycle.iat[i,motorcycle.columns.get_loc('instance_id')] = i
         for j in range(len(rider)):
@@ -85,10 +123,18 @@ def get_instance(rider, motorcycle, iou_threshold):
                     instance_final = motor2_rider_iou(motorcycle.iloc[i], motorcycle.iloc[instance], rider.iloc[j], i, instance)
                     rider.iat[j,rider.columns.get_loc('instance_id')] = instance_final
 
-
+    # exit the program
+    if(len(rider) > 1):
+        print("After instance assignment:")
+        print(rider.info())
+        print("Rider dataframe:")
+        print(rider)
+        print("Motorcycle dataframe:")
+        print(motorcycle)
     return rider, motorcycle
 
 
+# below 
 
 def heuristic_on_pred(a, motor, rider_ins):
     no_of_bbox = len(motor) + len(rider_ins)
@@ -142,6 +188,7 @@ def corner_condition(y, xmax, ymax):
     
     return y
 
+# This function basically takes 
 def find(bbox, instance, bboxes, classes):
     xmin, ymin, xmax, ymax = bbox[0], bbox[1], bbox[2], bbox[3]
     flag = 10000
@@ -268,6 +315,21 @@ def main(_argv):
         image_data = image_data[np.newaxis, ...].astype(np.float32)
         start_time = time.time()
 
+        # display image_data
+        #print(image_data)
+        # try:
+        #     cv2.imshow('image', image_data)
+        # except:
+        #     print('Frame : ')
+        #     cv2.imshow('image', frame)
+        #     cv2.waitKey(0)
+        #     cv2.destroyAllWindows()
+        #     cv2.waitKey(1)
+        #     time.sleep(0.5)
+
+        # save the frame as frame1.jpg
+        cv2.imwrite('frame1.jpg', frame)
+
         # run detections on tflite if flag is set
         if FLAGS.framework == 'tflite':
             interpreter.set_tensor(input_details[0]['index'], image_data)
@@ -321,7 +383,8 @@ def main(_argv):
         scores = scores[0:int(num_objects)]
         classes = classes.numpy()[0]
         classes = classes[0:int(num_objects)]
-        
+        print("classes (RM)")
+        print(classes)
 
         deleted_indx = []
         allowed_classes = [0,1]
@@ -336,6 +399,9 @@ def main(_argv):
         
         classes[classes == 1] = 3
 
+        print("Allowed classes (RM)")
+        print(classes)
+
         num_objects1 = valid_detections1.numpy()[0]
         bboxes1 = boxes1.numpy()[0]
         bboxes1 = bboxes1[0:int(num_objects1)]
@@ -343,7 +409,8 @@ def main(_argv):
         scores1 = scores1[0:int(num_objects1)]
         classes1 = classes1.numpy()[0]
         classes1 = classes1[0:int(num_objects1)]
-
+        print("classes (HNH)")
+        print(classes1)
         
 
         deleted_indx = []
@@ -358,12 +425,22 @@ def main(_argv):
         num_objects1 = len(classes1)
         
         classes1[classes1 == 1] = 2 
-        classes1[classes1 == 0] = 1 
+        classes1[classes1 == 0] = 1
+
+        print("Allowed classes (HNH)")
+        print(classes1)
 
         bboxes = np.concatenate((bboxes, bboxes1))
         scores = np.concatenate((scores, scores1))
         classes = np.concatenate((classes, classes1))
         num_objects = num_objects1 + num_objects
+
+        print("CONCATENATED")
+        print("Classes", classes)
+        print("Scores", scores)
+        print("Bboxes", bboxes)
+        print("Num objects", num_objects)
+
         if FLAGS.count:
             #cv2.putText(frame, "Objects being tracked: {}".format(count), (5, 35), cv2.FONT_HERSHEY_COMPLEX_SMALL, 2, (0, 255, 0), 2)
             print("Objects being tracked: {}".format(num_objects))
@@ -390,7 +467,6 @@ def main(_argv):
 
         y = np.zeros((len(motorcycle), 8))
         num = 0
-        tracker_instance = []
 
         for i in range(len(motorcycle)):
             input = []
@@ -399,16 +475,14 @@ def main(_argv):
             input.extend([float (motor['x']),float (motor['y']),float (motor['w']),float (motor['h'])])
 
             rider_ins = rider.loc[rider['instance_id']==instance]
-            if (len(rider_ins)==0):
-                tracker_instance.append([-1, -1])
-                continue
                 
             for j in range(len(rider_ins)):
                 input.extend([float (rider_ins.iloc[j]['x']),float (rider_ins.iloc[j]['y']),float (rider_ins.iloc[j]['w']),float (rider_ins.iloc[j]['h'])])
             
-            tracker_instance.append([num, len(rider_ins)])
             x=np.zeros((1,24))
             x[0,:len(input)] = np.array(input).reshape((1,-1))
+            print("Input to trapez model", x)
+
             predict = trapez_model.predict(x)
 
             a = predict[0]
@@ -419,18 +493,35 @@ def main(_argv):
             num = num+1
             
         trapez_bboxes = y[:num,:]
+        rider, trapez_instance_ids = get_instance_with_trapez(rider, trapez_bboxes, 0.01)
+        print("Trapez bboxes", trapez_bboxes)
+        print("Trapez instance ids", trapez_instance_ids)
+        
+        tracker_instance_trapez = []
+        for i in range(len(trapez_bboxes)):
+            instance = trapez_instance_ids[i]
+            rider_ins = rider.loc[rider['instance_id']==instance]
+            if (len(rider_ins)==0):
+                tracker_instance_trapez.append([-1, -1])
+                continue
+            tracker_instance_trapez.append([instance, len(rider_ins)])
+
+        print("Trapezium Tracker Instance", tracker_instance_trapez)
         deleted_indx = []
         instance = np.zeros((len(bboxes), 2), dtype = int)
         k = 0
         for i in range(len(bboxes)):
             if (classes[i]==3):
-                if (int(tracker_instance[k][1]) == -1):
+                if (int(tracker_instance_trapez[k][1]) == -1):
                     deleted_indx.append(i)
                 else:
-                    instance[i][:] = int(tracker_instance[k][0]), int(tracker_instance[k][1])
+                    instance[i][:] = int(tracker_instance_trapez[k][0]), int(tracker_instance_trapez[k][1])
                     k = k+1
             else:
                 instance[i][:] = -1, -1
+
+
+        print("Instance", instance)
 
         bboxes = np.delete(bboxes, deleted_indx, axis=0)
         scores = np.delete(scores, deleted_indx, axis=0)
@@ -489,6 +580,8 @@ def main(_argv):
         tracker.predict()
         tracker.update(detections)
 
+        print("Tracker tracks")
+
         # update tracks
         num = 0
         j=0
@@ -527,7 +620,8 @@ def main(_argv):
             bbox = track.to_tlbr()
             class_name = track.get_class()
             color = [255, 0, 0]
-            
+            # print the track info
+            print("ID: {}, Class: {}, BBox Coords (xmin, ymin, xmax, ymax): {}".format(str(track.track_id), class_name, (int(bbox[0]), int(bbox[1]), int(bbox[2]), int(bbox[3]))))
             if (class_name == 'No-Helmet'):
                 if track not in HNH_violation:
                     HNH_violation[track] = 1
