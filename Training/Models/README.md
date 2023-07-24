@@ -1,6 +1,11 @@
-# Steps for training on YOLOv4 : 
+# Steps for training on YOLOv4 and YOLOv5 : 
+
+### Here first the steps on YOLOv4 are given and then on YOLOv5
 
 ### Additional instructions for Curriculum learning are given at the end. Please read them before executing any of the normal commands as well
+
+
+# YOLOv4
 
 ## 1) Clone the original YOLOv4 repo first by
 ```
@@ -265,3 +270,32 @@ and
 cp rider_motor_class/* final_test_set M_R_H_NH_after_preprocessing
 ```
 and train again normally as given in the instructions above
+
+# YOLOv5
+
+The YOLOv5 repo is already here
+
+Run
+
+```
+cd yolov5
+```
+
+#### Assuming you have already downloaded the dataset (Refer to step 5 of YOLOv4 training)
+We need to change data/idd.yaml
+Add the absolute paths of train.txt and val.txt to this file 
+and change the classes section according to your custom dataset.
+
+Run 
+```
+python3 train.py --data idd.yaml --weights yolov5s.pt
+```
+for training. 
+
+The weights will be stored in runs folder in the directory (if not already present then the directory will be created).
+For curriculum learning refer to the same instructions above in the curriculum learning section
+
+
+
+
+
