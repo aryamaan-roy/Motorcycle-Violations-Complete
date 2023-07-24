@@ -1,6 +1,6 @@
 # Steps for training on YOLOv4 : 
 
-(Additional instructions for Curriculum learning are given at the end. Please read them before executing any of the normal commands as well)
+### Additional instructions for Curriculum learning are given at the end. Please read them before executing any of the normal commands as well
 
 ## 1) Clone the original YOLOv4 repo first by
 ```
