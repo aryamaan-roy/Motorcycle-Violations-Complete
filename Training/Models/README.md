@@ -1,6 +1,6 @@
 # Steps for training on YOLOv4 : 
 
-#### Additional instructions for Curriculum learning are given at the end. Please read them before executing any of the normal commands as well
+(Additional instructions for Curriculum learning are given at the end. Please read them before executing any of the normal commands as well)
 
 ## 1) Clone the original YOLOv4 repo first by
 ```
@@ -137,6 +137,32 @@ Here if you named the files according to the above procedure then,
 The weights file are present in the 
 ./backup folder
 
+## 12) Convert the darknet weights to tensorflow weights that can run with this repo
+
+Now, currently the weights you have are darknet weights and in order for you to use them in this repo, you need to convert them to tensorflow weights
+
+There is a folder in this directory named:
+```
+Convert_Darknet_YOLO_to_TensorFlow
+```
+
+Copy the weights in YOLOv4/backup to Convert_Darknet_YOLO_to_TensorFlow/data
+
+Run
+```
+cd Convert_Darknet_YOLO_to_TensorFlow
+```
+
+Change the save_model.py a bit as:
+
+Modify 
+```
+flags.DEFINE_string('weights', './data/<Path to weights file>', 'path to weights file')
+```
+and 
+```
+flags.DEFINE_string('output', '../../Weights/<output folder>', 'path to output')
+```
 
 # For curriculum training:
 
