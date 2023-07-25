@@ -96,7 +96,7 @@ filters = (c + 5) * 3
 just before the [yolo] section
 and also the number of classes in the yolo section.
 Refer to the yolov4-obj.cfg file in the repo here.
-Note that there are multiple filters keyword in the config file and you need to change all of them. 
+Note that there are multiple [yolo] sections in the config file and you need to change all of them. 
 
 ## 7) The next step is to edit the files in the data directory
 
