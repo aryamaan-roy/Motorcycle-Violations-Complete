@@ -208,7 +208,7 @@ cd training_data_817Images
 mkdir all_class_labels
 mkdir motor_class
 mkdir rider_motor_class
-cp training_data_817Images/*.txt all_class_labels
+cp final_test_set M_R_H_NH_after_preprocessing/*.txt all_class_labels
 cp all_class_labels/* motor_class
 cp all_class_labels/* rider_motor_class
 ```
