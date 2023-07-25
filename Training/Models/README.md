@@ -104,7 +104,7 @@ Run
 ```
 cd data
 ```
-Now modify the obj.data file
+Now modify the obj.data file or create one if not there
 
 Change the classes to the number of classes you want to train on
 Give the paths to the train, validation files that you created above relative to the root of the YOLOv4 directory
@@ -118,7 +118,7 @@ names = data/obj.names
 backup = ./backup
 )
 
-Now modify the obj.names file
+Now modify the obj.names file or create one if not there
 
 Add the names of the classes of your dataset to this file
 
