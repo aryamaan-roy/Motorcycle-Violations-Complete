@@ -50,7 +50,7 @@ In context of the IDD dataset your home could look like:
 ```
 Motorcycle-Violations-Complete/Training/Models:
     YOLOv4
-    training_data_817Images:
+    final_test_set M_R_H_NH_after_preprocessing:
         img1.jpg
         img1.txt
         img2.jpg
@@ -69,10 +69,10 @@ Motorcycle-Violations-Complete/Training/Models:
 ```
 Run
 ```
-cd train_data
+cd final_test_set M_R_H_NH_after_preprocessing/
 readlink -f *.jpg > ../train.txt
 cd ..
-cd val_data
+cd M_R_H_NH
 readlink -f *.jpg > ../val.txt
 ```
 Now in your home directory you will have 2 files 
@@ -177,7 +177,7 @@ Motorcycle-Violations-Complete/Training/Models:
     YOLOv4
     train.txt
     val.txt
-    training_data_817Images:
+    final_test_set M_R_H_NH_after_preprocessing:
         img1.jpg
         img1.txt
         img2.jpg
@@ -185,7 +185,7 @@ Motorcycle-Violations-Complete/Training/Models:
         .
         .
         .
-    validation_data_234Images:
+    M_R_H_NH:
         val1.jpg
         val1.txt
         val2.jpg
