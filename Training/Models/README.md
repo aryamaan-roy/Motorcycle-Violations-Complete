@@ -36,7 +36,7 @@ make
 ```
 ## 4) Download pretrained weights:
 ```
-wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.weights
+wget https://github.com/AlexeyAB/darknet/releases/download/darknet_yolo_v3_optimal/yolov4.conv.137
 ```
 ## 5) Get the data in YOLOv4 format
 (class_id, X_center, Y_center, width, height)
