@@ -1,4 +1,6 @@
 # ignore data folder
 /data
 /Weights
-```
+ 
+# ignore all folders named "outputs" in all subfolders
+**/outputs
