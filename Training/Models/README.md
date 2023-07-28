@@ -81,6 +81,7 @@ val.txt
 that you will need in the future steps
 
 (For curriculum training, please refer to the end)
+(For Helmet No-Helmet training, please refer to the end)
 
 ## 6) Run the following command
 ```
@@ -274,6 +275,22 @@ cp rider_motor_class/* final_test_set M_R_H_NH_after_preprocessing
 ```
 and train again normally as given in the instructions above
 
+# Helmet No-Helmet Training
+
+The procedure for training on extracted ROI's is as follows:
+
+1) Open roi_extract.py and change the img_folder (absolute path) and txt_folder path (absolute path) to the ones containing training or validation images.
+2) Make sure you have labels corresponding to all_class_labels in the folder you mention here.
+3) Change roi_folder to point to the path (absolute path) where you want to save the extracted ROIs and the corresponding labels.
+4) Run
+   ```
+   python3 extract.py
+   ```
+5) The extracted labels and images will be present in the folder specified in roi_folder
+6) You need to create a train.txt and a val.txt for the training.
+7) Refer to step 5 above on how to do that
+8) Follow the rest of the steps (5, ...) to train the model.
+   
 # YOLOv5
 
 The YOLOv5 repo is already here
