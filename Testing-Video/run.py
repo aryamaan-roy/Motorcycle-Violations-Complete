@@ -38,8 +38,8 @@ from tools import generate_detections as gdet
 flags.DEFINE_string('framework', 'tf', '(tf, tflite, trt')
 #flags.DEFINE_string('weights', './ Weights/yolov4-416',
 #                    'path to weights file')
-flags.DEFINE_string('weights_L4', '../Weights/rider_motor_512','path to weights file')
-flags.DEFINE_string('weights_RHNH', '../Weights/helmet_no_helmet_512','path to weights file')
+flags.DEFINE_string('weights_L4', '../Weights/yolov4/rider_motor_512','path to weights file')
+flags.DEFINE_string('weights_RHNH', '../Weights/yolov4/helmet_no_helmet_512','path to weights file')
 flags.DEFINE_string('classes', '../data/classes/4_class_detector.names','path to manes file')
 flags.DEFINE_integer('size', 512, 'resize images to')
 flags.DEFINE_float('rider_pred_threshold', 1.5, 'IOU/NIOU area threshold')
@@ -761,6 +761,14 @@ def main(_argv):
         nums = [] 
         riders = []
         vals = []
+
+        # Loops over all the tracks . If track is a motorcycle, then it finds the associated instance id, 
+        # number of riders and min distnace (val) of the nearest motorcycle bbox.
+        # It appends the above to the track_ids, nums, riders and vals list.
+        # If the instance id of the nearest motorcycle bbox ṭhat the find function returns is already present in the nums list. 
+        # Then it checks if the val returned by the find function is less than the val already present in the vals list. 
+        # If yes, then it replaces the val and the corresponding track id and number of riders in the lists.
+
         for track in tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue 
